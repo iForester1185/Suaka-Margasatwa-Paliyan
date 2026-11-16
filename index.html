@@ -1016,7 +1016,7 @@ if(BASEMAP){base['Citra satelit']=L.tileLayer('https://server.arcgisonline.com/A
   base['Peta jalan']=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap'});}
 L.control.scale({imperial:false,position:'bottomright'}).addTo(map);
 map.attributionControl.setPrefix(false);map.attributionControl.addAttribution('Batas: digitasi citra drone Agu 2026');
-const batasLyr=L.geoJSON(B,{style:()=>({color:col.kawasan,weight:3,fillColor:col.kawasan,fillOpacity:.05,interactive:false})}).addTo(map);
+const batasLyr=L.geoJSON(B,{style:()=>({color:'#B57BFF',weight:4,fillColor:'#B57BFF',fillOpacity:.05,interactive:false})}).addTo(map);
 const fitAll=()=>map.fitBounds(batasLyr.getBounds(),{padding:[20,20]});
 
 let theme='kelas',fStatus='all',fKelas='all',sel=null;
