@@ -739,6 +739,24 @@ p{margin:0}
 .sres button{display:flex;justify-content:space-between;gap:8px;width:100%;padding:6px 9px;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer;text-align:left;font-size:.85rem}
 .sres button:hover{background:var(--chip)}
 .sres span{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.ptform{display:flex;flex-direction:column;gap:6px}
+.ptrow{display:flex;gap:6px;flex-wrap:wrap}
+.ptrow .btn{flex:1}
+.btn.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.btn.pri{background:var(--kawasan);color:var(--panel);border-color:var(--kawasan);font-weight:600}
+.ptmsg{font-size:.78rem;color:var(--muted)} .ptmsg.err{color:var(--gangguan)}
+.ptlist{display:flex;flex-direction:column;gap:6px}
+.ptitem{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);font-size:.8rem;display:flex;flex-direction:column;gap:3px}
+.ptitem .hd{display:flex;gap:6px;align-items:center}
+.ptitem .hd b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem}
+.ptitem .hd button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:.78rem;padding:2px 4px}
+.ptitem .co{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.7rem;font-weight:600;padding:1px 7px;border-radius:999px;margin-right:4px}
+.tag.in{background:color-mix(in srgb,var(--kawasan) 18%,transparent);color:var(--kawasan)}
+.tag.out{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
+.tag.gar{background:color-mix(in srgb,var(--garapan) 22%,transparent);color:var(--ink)}
+.picking #map{cursor:crosshair}
+.sw.pt{background:var(--gangguan);border-radius:50% 50% 50% 0;transform:rotate(-45deg) scale(.85)}
 .mapwrap{position:relative;min-height:0;min-width:0}
 #map{position:absolute;inset:0;background-color:var(--ground);
   background-image:linear-gradient(color-mix(in srgb,var(--line) 70%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--line) 70%,transparent) 1px,transparent 1px);background-size:40px 40px}
@@ -843,6 +861,18 @@ tbody tr{cursor:pointer} tbody tr:hover,tbody tr.sel{background:var(--chip)}
       <div class="sres" id="qres" hidden></div>
     </div>
     <div class="stack">
+      <h3>Tambah titik koordinat</h3>
+      <div class="ptform">
+        <input class="inp" id="pt-co" placeholder="-8.01237, 110.51984" aria-label="Koordinat">
+        <input class="inp" id="pt-nm" placeholder="Keterangan, mis. Tebangan baru" aria-label="Keterangan titik">
+        <button class="btn pri" id="pt-add">Tambahkan titik</button>
+        <div class="ptrow"><button class="btn" id="pt-pick">Ketuk di peta</button><button class="btn" id="pt-gps">Lokasi saya</button></div>
+        <p class="ptmsg" id="pt-msg">Format: desimal (-8.01237, 110.51984), cap foto (8,01237S 110,51984E), DMS (8°0'44"S 110°31'11"E), atau UTM 49S (446620 9113832).</p>
+      </div>
+      <div class="ptlist" id="pt-list"></div>
+      <div class="ptrow" id="pt-tools" hidden><button class="btn" id="pt-dl">Unduh GeoJSON</button><button class="btn" id="pt-clear">Hapus semua</button></div>
+    </div>
+    <div class="stack">
       <h3>Filter garapan</h3>
       <label class="fld">Status data<select id="f-status"><option value="all">Semua bidang</option><option value="ada">Nama penggarap terdata</option><option value="belum">Belum terdata</option><option value="tumpang">Tumpang tindih</option></select></label>
       <label class="fld">Kelas luas<select id="f-kelas"><option value="all">Semua kelas</option></select></label>
@@ -910,7 +940,7 @@ tbody tr{cursor:pointer} tbody tr:hover,tbody tr.sel{background:var(--chip)}
         <h3>Penebangan · 28 September 2026</h3>
         <div style="display:flex;gap:10px;align-items:baseline;margin:6px 0"><span class="big">16</span><span>pohon ditebang di Karangasem, di dalam kawasan</span></div>
         <div class="ph" id="teb-ph"></div>
-        <p style="font-size:.85rem">Tiga foto berkoordinat (08.10–08.12 WIB) dalam radius 20 m. Titik berada di area garapan inventaris.</p>
+        <p style="font-size:.85rem">Tiga foto berkoordinat (08.10–08.12 WIB) dalam radius 20 m. Dua titik jatuh di dalam poligon garapan dan satu titik di tepinya (±1 m), sehingga lokasinya berada di area garapan.</p>
         <p class="note warn" style="margin-top:8px">Lokasi ini petunjuk awal untuk verifikasi lapangan, bukan penentuan pelaku.</p>
         <button class="btn" id="teb-go" style="margin-top:10px">Perbesar ke lokasi</button>
       </div>
@@ -1024,7 +1054,8 @@ const t20=L.layerGroup(DATA.trap20.map(p=>L.marker([p.lat,p.lon],{icon:L.divIcon
 const tebIcon=L.divIcon({className:'',html:`<svg width="22" height="20" viewBox="0 0 22 20"><path d="M11 1 L21 19 L1 19 Z" fill="${col.gangguan}" stroke="#fff" stroke-width="1.6"/><text x="11" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="sans-serif">!</text></svg>`,iconSize:[22,20],iconAnchor:[11,14]});
 const tebLyr=L.layerGroup(DATA.tebangan.map(t=>L.marker([t.lat,t.lon],{icon:tebIcon,zIndexOffset:1000}).bindPopup(`<div class="pp"><h4>Penebangan pohon</h4><div class="sub">${esc(t.foto)} · ${esc(t.waktu)} WIB</div><dl><dt>Koordinat</dt><dd>${Math.abs(t.lat).toFixed(5).replace('.',',')}° LS, ${t.lon.toFixed(5).replace('.',',')}° BT</dd></dl>${FOTO[t.foto]?`<img src="${FOTO[t.foto]}" alt="">`:''}</div>`,{maxWidth:280}))).addTo(map);
 const usrLyr=L.featureGroup().addTo(map);
-const LAYERS=[['batas','Batas kawasan',batasLyr,'',true],['gar','Lahan garapan',garLyr,f0.format(G.length),true],['keh','Kehati 2023–2026',kehLyr,'',true,'cnt-keh'],['teb','Penebangan Sep 2026',tebLyr,'3',true],['b15','Pengamatan burung 2015',b15,DATA.burung15.length,false],['m20','Distribusi mamalia 2020',m20,DATA.mam20.length,false],['trap','Trap mamalia 2020',t20,DATA.trap20.length,false],['usr','Data tambahan',usrLyr,'',true,'cnt-usr']];
+const ptLyr=L.featureGroup().addTo(map);
+const LAYERS=[['pt','Titik saya',ptLyr,'',true,'cnt-pt'],['batas','Batas kawasan',batasLyr,'',true],['gar','Lahan garapan',garLyr,f0.format(G.length),true],['keh','Kehati 2023–2026',kehLyr,'',true,'cnt-keh'],['teb','Penebangan Sep 2026',tebLyr,'3',true],['b15','Pengamatan burung 2015',b15,DATA.burung15.length,false],['m20','Distribusi mamalia 2020',m20,DATA.mam20.length,false],['trap','Trap mamalia 2020',t20,DATA.trap20.length,false],['usr','Data tambahan',usrLyr,'',true,'cnt-usr']];
 LAYERS.forEach(([k,lab,lyr,cnt,on,cid])=>{const r=el('label','lyr');const i=el('input');i.type='checkbox';i.id='lyr-'+k;i.checked=on;
   i.addEventListener('change',()=>{i.checked?lyr.addTo(map):map.removeLayer(lyr);});const c=el('span','c',cnt);if(cid)c.id=cid;
   r.append(i,el('span','sw '+k),el('span',null,lab),c);$('layers').appendChild(r);});
@@ -1065,6 +1096,81 @@ async function handleFiles(files){for(const f of files){try{
   const row=el('div');row.append(el('span','sw usr'),el('span',null,f.name+' ('+lyr.getLayers().length+')'));const x=el('button',null,'Hapus');x.addEventListener('click',()=>{usrLyr.removeLayer(lyr);nUsr-=lyr.getLayers().length;$('cnt-usr').textContent=nUsr||'';row.remove();});row.appendChild(x);$('usrlist').appendChild(row);
   if(lyr.getBounds().isValid())map.fitBounds(lyr.getBounds(),{padding:[30,30],maxZoom:18});
  }catch(err){const r=el('div',null,f.name+': berkas tidak bisa dibaca. Pastikan formatnya GeoJSON, KML, atau KMZ.');r.style.color=col.gangguan;$('usrlist').appendChild(r);}}}
+
+/* ---------- titik koordinat ---------- */
+function utmToLL(x,y,zone,south){const a=6378137,f=1/298.257223563,k0=.9996,e2=f*(2-f),ep2=e2/(1-e2);
+  x-=500000;if(south)y-=10000000;const M=y/k0,mu=M/(a*(1-e2/4-3*e2*e2/64-5*e2**3/256));const e1=(1-Math.sqrt(1-e2))/(1+Math.sqrt(1-e2));
+  const p1=mu+(3*e1/2-27*e1**3/32)*Math.sin(2*mu)+(21*e1*e1/16-55*e1**4/32)*Math.sin(4*mu)+(151*e1**3/96)*Math.sin(6*mu)+(1097*e1**4/512)*Math.sin(8*mu);
+  const N1=a/Math.sqrt(1-e2*Math.sin(p1)**2),T1=Math.tan(p1)**2,C1=ep2*Math.cos(p1)**2,R1=a*(1-e2)/Math.pow(1-e2*Math.sin(p1)**2,1.5),D=x/(N1*k0);
+  const lat=p1-(N1*Math.tan(p1)/R1)*(D*D/2-(5+3*T1+10*C1-4*C1*C1-9*ep2)*D**4/24+(61+90*T1+298*C1+45*T1*T1-252*ep2-3*C1*C1)*D**6/720);
+  const lon=(D-(1+2*T1+C1)*D**3/6+(5-2*C1+28*T1-3*C1*C1+8*ep2+24*T1*T1)*D**5/120)/Math.cos(p1);
+  return [lat*180/Math.PI,(zone*6-183)+lon*180/Math.PI];}
+function parseCoord(raw){let s=' '+raw.toUpperCase()+' ';
+  s=s.replace(/LINTANG\s*SELATAN|\bLS\b/g,'S').replace(/LINTANG\s*UTARA|\bLU\b/g,'N').replace(/BUJUR\s*TIMUR|\bBT\b/g,'E').replace(/BUJUR\s*BARAT|\bBB\b/g,'W');
+  const dms=[...s.matchAll(/(-?\d+)\s*[°º]\s*(\d+(?:[.,]\d+)?)\s*['’′]?\s*(\d+(?:[.,]\d+)?)?\s*["”″]?\s*([NSEW])?/g)];
+  let vals;
+  if(dms.length>=2){vals=dms.slice(0,2).map(m=>{const d=Math.abs(+m[1]),mi=+m[2].replace(',','.'),se=m[3]?+m[3].replace(',','.'):0;let v=d+mi/60+se/3600;if(m[1].startsWith('-'))v=-v;return [v,m[4]||''];});}
+  else{const nums=[...s.matchAll(/(-?\d+(?:[.,]\d+)?)\s*([NSEW])?(?![\d])/g)].map(m=>[+m[1].replace(',','.'),m[2]||'']);
+    if(nums.length<2)return null;vals=nums.slice(0,2);
+    if(Math.abs(vals[0][0])>1000&&Math.abs(vals[1][0])>1000){const[a,b]=[vals[0][0],vals[1][0]];const x=a<b?a:b,y=a<b?b:a;const r=utmToLL(x,y,49,true);return{lat:r[0],lon:r[1],note:'Dibaca sebagai UTM zona 49S.'};}}
+  let lat,lon,la='',lo='';
+  vals.forEach(([v,h])=>{if(h==='N'||h==='S'){lat=v;la=h;}else if(h==='E'||h==='W'){lon=v;lo=h;}});
+  if(lat==null&&lon==null){[lat,lon]=[vals[0][0],vals[1][0]];if(Math.abs(lat)>90)[lat,lon]=[lon,lat];}
+  else if(lat==null)lat=vals.find(v=>v[0]!==lon)[0];else if(lon==null)lon=vals.find(v=>v[0]!==lat)[0];
+  if(la==='S')lat=-Math.abs(lat);if(la==='N')lat=Math.abs(lat);if(lo==='W')lon=-Math.abs(lon);if(lo==='E')lon=Math.abs(lon);
+  let note='';if(!la&&lat>0&&lat<12&&lon>105&&lon<115){lat=-lat;note='Lintang tanpa tanda minus, dianggap Lintang Selatan.';}
+  if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  return{lat,lon,note};}
+function inRing(pt,ring){let c=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];if((yi>pt[1])!==(yj>pt[1])&&pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi)c=!c;}return c;}
+function inPoly(pt,g){const polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;return polys.some(r=>inRing(pt,r[0])&&!r.slice(1).some(h=>inRing(pt,h)));}
+function distToBatas(lat,lon){const kx=111320*Math.cos(lat*Math.PI/180),ky=110574;let best=1e9;const rings=B.geometry.type==='Polygon'?[B.geometry.coordinates[0]]:B.geometry.coordinates.map(p=>p[0]);
+  rings.forEach(r=>{for(let i=0;i<r.length-1;i++){const ax=(r[i][0]-lon)*kx,ay=(r[i][1]-lat)*ky,bx=(r[i+1][0]-lon)*kx,by=(r[i+1][1]-lat)*ky;const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,-(ax*dx+ay*dy)/((dx*dx+dy*dy)||1)));best=Math.min(best,Math.hypot(ax+t*dx,ay+t*dy));}});return best;}
+const dmsTxt=(v,pos,neg)=>{const a=Math.abs(v),d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;return `${d}°${m}'${s.toFixed(1).replace('.',',')}"${v<0?neg:pos}`;};
+function analyse(lat,lon){const pt=[lon,lat],inside=inPoly(pt,B.geometry),dist=distToBatas(lat,lon);
+  const gar=G.find(f=>inPoly(pt,f.geometry));
+  let near=null,nd=1e9;O.forEach(o=>{const d=Math.hypot((o.lon-lon)*111320*Math.cos(lat*Math.PI/180),(o.lat-lat)*110574);if(d<nd){nd=d;near=o;}});
+  return{inside,dist,gar,near,nd};}
+let PTS=[];try{PTS=JSON.parse(localStorage.getItem('smp-titik')||'[]');}catch(e){PTS=[];}
+const savePts=()=>{try{localStorage.setItem('smp-titik',JSON.stringify(PTS.map(({_m,...r})=>r)));}catch(e){}};
+const ptIcon=()=>L.divIcon({className:'',html:`<svg width="26" height="34" viewBox="0 0 26 34"><path d="M13 33C13 33 2 20 2 12.5A11 11 0 0 1 24 12.5C24 20 13 33 13 33Z" fill="${col.gangguan}" stroke="#fff" stroke-width="2"/><circle cx="13" cy="12.5" r="4.2" fill="#fff"/></svg>`,iconSize:[26,34],iconAnchor:[13,33],popupAnchor:[0,-30]});
+function ptPopup(p){const a=analyse(p.lat,p.lon);
+  return `<div class="pp"><h4>${esc(p.nama)}</h4><div class="sub">${esc(p.waktu)}${p.src?' · '+esc(p.src):''}</div><dl>
+   <dt>Desimal</dt><dd>${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}</dd><dt>DMS</dt><dd>${dmsTxt(p.lat,'LU','LS')} ${dmsTxt(p.lon,'BT','BB')}</dd>
+   <dt>Kawasan</dt><dd>${a.inside?'Di dalam SM Paliyan, '+f0.format(a.dist)+' m dari batas':'Di luar kawasan, '+f0.format(a.dist)+' m dari batas'}</dd>
+   <dt>Garapan</dt><dd>${a.gar?esc(a.gar.properties.terdata?a.gar.properties.nama:'Belum terdata')+' (no. '+a.gar.properties.no+', '+f3.format(a.gar.properties.luas_ha)+' ha)':'Tidak di lahan garapan'}</dd>
+   ${a.near&&a.nd<300?`<dt>Kehati terdekat</dt><dd>${esc(a.near.sp.nama)}, ${f0.format(a.nd)} m</dd>`:''}</dl></div>`;}
+function renderPts(){ptLyr.clearLayers();const w=$('pt-list');w.innerHTML='';
+  PTS.forEach((p,i)=>{const m=L.marker([p.lat,p.lon],{icon:ptIcon(),zIndexOffset:2000}).bindPopup(()=>ptPopup(p),{maxWidth:300}).addTo(ptLyr);p._m=m;
+    const a=analyse(p.lat,p.lon);const it=el('div','ptitem');const hd=el('div','hd');hd.appendChild(el('b',null,p.nama));
+    const go=el('button',null,'Lihat');go.addEventListener('click',()=>{map.setView([p.lat,p.lon],Math.max(map.getZoom(),17));m.openPopup();if(innerWidth<=760)$('map').scrollIntoView({behavior:'smooth'});});
+    const cp=el('button',null,'Salin');cp.addEventListener('click',async()=>{const t=p.lat.toFixed(6)+', '+p.lon.toFixed(6);try{await navigator.clipboard.writeText(t);cp.textContent='Tersalin';}catch(e){cp.textContent=t;}setTimeout(()=>cp.textContent='Salin',1800);});
+    const del=el('button',null,'Hapus');del.addEventListener('click',()=>{PTS.splice(i,1);savePts();renderPts();});
+    hd.append(go,cp,del);it.appendChild(hd);it.appendChild(el('div','co',p.lat.toFixed(6)+', '+p.lon.toFixed(6)));
+    const tg=el('div');const t1=el('span','tag '+(a.inside?'in':'out'),a.inside?'Dalam kawasan':'Luar kawasan');tg.appendChild(t1);
+    if(a.gar)tg.appendChild(el('span','tag gar','Garapan: '+(a.gar.properties.terdata?a.gar.properties.nama:'belum terdata')));it.appendChild(tg);w.appendChild(it);});
+  $('pt-tools').hidden=!PTS.length;const c=$('cnt-pt');if(c)c.textContent=PTS.length||'';}
+function addPt(lat,lon,nama,src,note){const p={lat:+lat.toFixed(7),lon:+lon.toFixed(7),nama:nama||('Titik '+(PTS.length+1)),src:src||'',waktu:new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})};
+  PTS.push(p);savePts();renderPts();$('lyr-pt').checked=true;ptLyr.addTo(map);map.setView([lat,lon],Math.max(map.getZoom(),17));p._m.openPopup();
+  const a=analyse(lat,lon);msg((note?note+' ':'')+(a.inside?'Titik berada di dalam kawasan.':'Titik berada di luar kawasan, '+f0.format(a.dist)+' m dari batas.'));
+  $('pt-nm').value='';}
+const msg=(t,err)=>{const m=$('pt-msg');m.textContent=t;m.classList.toggle('err',!!err);};
+$('pt-add').addEventListener('click',()=>{const r=parseCoord($('pt-co').value);if(!r){msg('Koordinat tidak terbaca. Contoh: -8.01237, 110.51984 atau 8,01237S 110,51984E.',true);return;}
+  addPt(r.lat,r.lon,$('pt-nm').value.trim(),'diketik',r.note);$('pt-co').value='';});
+$('pt-co').addEventListener('keydown',e=>{if(e.key==='Enter')$('pt-add').click();});
+let picking=false;const setPick=on=>{picking=on;$('pt-pick').classList.toggle('on',on);$('pt-pick').textContent=on?'Ketuk lokasi di peta…':'Ketuk di peta';document.body.classList.toggle('picking',on);if(on){msg('Ketuk titik di peta untuk menandainya.');if(innerWidth<=760)$('map').scrollIntoView({behavior:'smooth'});}};
+$('pt-pick').addEventListener('click',()=>setPick(!picking));
+map.on('click',e=>{if(!picking)return;setPick(false);addPt(e.latlng.lat,e.latlng.lng,$('pt-nm').value.trim(),'ditandai di peta');});
+garLyr.on('click',e=>{if(picking){L.DomEvent.stop(e);map.closePopup();setPick(false);addPt(e.latlng.lat,e.latlng.lng,$('pt-nm').value.trim(),'ditandai di peta');}});
+$('pt-gps').addEventListener('click',()=>{if(!navigator.geolocation){msg('Perangkat ini tidak mendukung GPS di browser.',true);return;}
+  msg('Mencari lokasi…');navigator.geolocation.getCurrentPosition(pos=>{const c=pos.coords;addPt(c.latitude,c.longitude,$('pt-nm').value.trim()||'Lokasi saya','GPS ±'+Math.round(c.accuracy)+' m');
+    L.circle([c.latitude,c.longitude],{radius:c.accuracy,color:col.gangguan,weight:1,fillOpacity:.08,interactive:false}).addTo(ptLyr);},
+   err=>msg(err.code===1?'Izin lokasi ditolak. Izinkan akses lokasi untuk situs ini di pengaturan browser, lalu coba lagi.':'Lokasi belum didapat. Coba lagi di tempat terbuka.',true),{enableHighAccuracy:true,timeout:20000,maximumAge:0});});
+$('pt-dl').addEventListener('click',()=>{const gj={type:'FeatureCollection',features:PTS.map(p=>{const a=analyse(p.lat,p.lon);return{type:'Feature',properties:{nama:p.nama,waktu:p.waktu,sumber:p.src,dalam_kawasan:a.inside,jarak_batas_m:Math.round(a.dist),garapan:a.gar?(a.gar.properties.terdata?a.gar.properties.nama:'Belum terdata'):''},geometry:{type:'Point',coordinates:[p.lon,p.lat]}};})};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(gj,null,1)],{type:'application/geo+json'}));const a=el('a');a.href=url;a.download='titik_sm_paliyan.geojson';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  msg('Jika unduhan tidak berjalan, buka WebGIS dari alamat GitHub Pages.');});
+let clr=0;$('pt-clear').addEventListener('click',e=>{if(!clr){clr=1;e.target.textContent='Ketuk lagi untuk menghapus';setTimeout(()=>{clr=0;e.target.textContent='Hapus semua';},3000);return;}PTS=[];savePts();renderPts();clr=0;e.target.textContent='Hapus semua';msg('Semua titik dihapus.');});
+if(!BASEMAP){$('pt-dl').remove();}
+renderPts();
 
 /* ---------- tab ---------- */
 const tabs=[...document.querySelectorAll('.tab')];
